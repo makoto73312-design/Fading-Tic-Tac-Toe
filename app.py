@@ -1,22 +1,39 @@
 import streamlit as st
 
+# 頁面基本設定
 st.set_page_config(page_title="會消失的井字棋", page_icon="❌", layout="centered")
 
-# 安全版 CSS：確保手機版保持橫向，且調大按鈕字體
+# 🛠️ 強制蓋過 Streamlit 的手機版防折行 CSS
 st.markdown("""
     <style>
-    [data-testid="stHorizontalBlock"] {
+    /* 1. 強制橫向容器在所有螢幕尺寸下都保持橫向排列 */
+    div[data-testid="stHorizontalBlock"] {
+        display: flex !important;
         flex-direction: row !important;
+        flex-wrap: nowrap !important;
+        gap: 6px !important;
     }
+    
+    /* 2. 強制三個欄位平分寬度（各 33.33%），防止手機版被改成 100% 垂直堆疊 */
+    div[data-testid="stColumn"], div[data-testid="column"] {
+        width: 33.33% !important;
+        min-width: 0px !important;
+        flex: 1 1 33.33% !important;
+    }
+
+    /* 3. 按鈕外觀微調：適應手機螢幕寬度，文字不折行 */
     div.stButton > button {
+        width: 100% !important;
         height: 70px !important;
-        font-size: 22px !important;
+        font-size: 18px !important;
         font-weight: bold !important;
+        padding: 0px !important;
+        white-space: nowrap !important;
     }
     </style>
 """, unsafe_allow_html=True)
 
-# 1. 初始化狀態
+# 1. 初始化遊戲狀態
 if "board" not in st.session_state:
     st.session_state.board = [""] * 9
     st.session_state.o_queue = []
@@ -27,9 +44,9 @@ if "board" not in st.session_state:
 # 2. 獲勝判定
 def check_win(board, player):
     win_lines = [
-        [0, 1, 2], [3, 4, 5], [6, 7, 8],
-        [0, 3, 6], [1, 4, 7], [2, 5, 8],
-        [0, 4, 8], [2, 4, 6]
+        [0, 1, 2], [3, 4, 5], [6, 7, 8],  # 橫線
+        [0, 3, 6], [1, 4, 7], [2, 5, 8],  # 直線
+        [0, 4, 8], [2, 4, 6]              # 對角線
     ]
     return any(all(board[i] == player for i in line) for line in win_lines)
 
@@ -70,7 +87,7 @@ if st.session_state.winner:
 else:
     st.info(f"輪到玩家：**{st.session_state.turn}**")
 
-# 6. 棋盤繪製
+# 6. 繪製 3x3 九宮格
 for row in range(3):
     cols = st.columns(3)
     for col in range(3):
